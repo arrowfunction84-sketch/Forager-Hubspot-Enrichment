@@ -18,11 +18,19 @@ async def hubspot_webhook(request: Request):
         body = await request.json()
         log.info(f"Webhook received: {body}")
         
+        # Postman se bheja gaya domain nikalna
+        domain = body.get("company_domain")
+        if not domain:
+            return {"status": "success", "message": "Ignored: No domain"}
+
         settings = get_settings()
         enricher = Enricher(settings)
-        await enricher.aclose()
         
-        return {"status": "success"}
+        # Asli kaam yahan trigger hoga
+        await enricher.process_webhook(domain)
+        
+        await enricher.aclose()
+        return {"status": "success", "message": "Data enriched in HubSpot!"}
     except Exception as e:
         log.error(f"Error: {e}")
         return {"status": "error", "message": str(e)}
